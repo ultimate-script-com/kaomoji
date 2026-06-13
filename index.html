@@ -16,33 +16,22 @@
             document.addEventListener("DOMContentLoaded", () => {
                 const svg = document.querySelector("svg");
 
-                // =========================
-                // サイズ & 座標系
-                // =========================
                 let S = Math.min(window.innerWidth, window.innerHeight);
 
                 svg.setAttribute("viewBox", `0 0 ${S} ${S}`);
                 svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
                 svg.style.display = "block";
 
-                // =========================
                 // 背景
-                // =========================
-                const bgColor = "#0f172a";
-
                 const bg = document.createElementNS(
                     "http://www.w3.org/2000/svg",
                     "rect",
                 );
                 bg.setAttribute("width", S);
                 bg.setAttribute("height", S);
-                bg.setAttribute("fill", bgColor);
+                bg.setAttribute("fill", "#0f172a");
                 svg.appendChild(bg);
 
-                // =========================
-                // 顔文字
-                // =========================
                 const faces = ["(´・ω・｀)", "(ﾟ∀ﾟ)", "(；ﾟДﾟ)"];
                 const objects = [];
 
@@ -90,67 +79,44 @@
                             y: pos[i][1],
                             phase: Math.random() * Math.PI * 2,
                             gPhase: Math.random() * Math.PI * 2,
-                            glitch: 0,
                         });
                     }
                 }
 
-                // =========================
-                // グリッチ制御（統一）
-                // =========================
-                let glitchTimer = 0;
-
-                function triggerGlitch() {
-                    const obj = objects[(Math.random() * objects.length) | 0];
-                    if (obj) obj.glitch = 0.3;
-                }
-
-                // =========================
-                // アニメーション
-                // =========================
                 let t = 0;
 
                 function animate() {
                     t += 0.012;
-                    glitchTimer++;
-
-                    // 1.5秒ごと
-                    if (glitchTimer > 90) {
-                        triggerGlitch();
-                        glitchTimer = 0;
-                    }
 
                     for (const obj of objects) {
                         let x = obj.x;
                         let y = obj.y;
 
-                        // 微揺れ
+                        // 微揺れ（共通）
                         x += Math.sin(t * 10 + obj.gPhase) * 0.2;
                         y += Math.cos(t * 12 + obj.gPhase) * 0.2;
 
-                        // 顔ごとの動き
+                        // (´・ω・｀) 安定
                         if (obj.face === "(´・ω・｀)") {
                             x += Math.sin(t * 1.2 + obj.phase) * (S * 0.05);
                             y += Math.cos(t * 1.0 + obj.phase) * (S * 0.04);
-                        } else if (obj.face === "(ﾟ∀ﾟ)") {
-                            x += Math.sin(t * 3.5 + obj.phase) * (S * 0.1);
-                            y += Math.sin(t * 5 + obj.phase) * (S * 0.08);
-                        } else {
-                            x += Math.sin(t * 2.5 + obj.phase) * (S * 0.05);
-                            y += Math.cos(t * 3.5 + obj.phase) * (S * 0.04);
-                            x += (Math.random() - 0.5) * 5;
-                            y += (Math.random() - 0.5) * 5;
                         }
 
-                        // グリッチ
-                        if (obj.glitch > 0) {
-                            const g = obj.glitch;
+                        // (ﾟ∀ﾟ) 大きく動く（速度はそのまま）
+                        else if (obj.face === "(ﾟ∀ﾟ)") {
+                            x += Math.sin(t * 3 + obj.phase) * (S * 0.1);
+                            y += Math.sin(t * 9 + obj.phase) * (S * 0.12);
+                        }
 
-                            x += (Math.random() - 0.5) * 4 * g;
-                            y += (Math.random() - 0.5) * 4 * g;
+                        // (；ﾟДﾟ) 高速カタカタ震え
+                        else {
+                            // 高速周期振動
+                            x += Math.sin(t * 50 + obj.phase) * 3;
+                            y += Math.cos(t * 100 + obj.phase) * 3;
 
-                            obj.glitch *= 0.9;
-                            if (obj.glitch < 0.01) obj.glitch = 0;
+                            // 細かいランダム震え
+                            x += (Math.random() - 0.5) * 4;
+                            y += (Math.random() - 0.5) * 4;
                         }
 
                         obj.el.setAttribute(
@@ -162,9 +128,6 @@
                     requestAnimationFrame(animate);
                 }
 
-                // =========================
-                // start
-                // =========================
                 createObjects();
                 animate();
             });

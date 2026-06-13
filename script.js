@@ -1,5 +1,4 @@
-const svg = document.getElementById("svg");
-
+const svg = document.currentScript.parentElement;
 // =====================================
 // サイズ
 // =====================================

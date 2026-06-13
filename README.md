@@ -1,4 +1,0 @@
-# kaomoji
-# kaomoji
-# kaomoji
-# kaomoji

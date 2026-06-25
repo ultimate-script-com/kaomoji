@@ -1,271 +1,267 @@
-const svg = document.querySelector("svg");
+// ==============================
+// SVGを取得
+// （index.svg の場合は document.documentElement）
+// ==============================
+const svg = document.documentElement;
 
-// ====================================
-// 設定
-// ====================================
+// ==============================
+// 画面いっぱいの正方形にする
+// viewBox は常に 1000 × 1000
+// ==============================
+function resize() {
+    const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
 
-const SPEED = 1;
-const AMP = 60;
+    svg.setAttribute("width", size);
+    svg.setAttribute("height", size);
+    svg.setAttribute("viewBox", "0 0 1000 1000");
+}
 
-// ====================================
-// 顔文字
-// ====================================
+resize();
+window.addEventListener("resize", resize);
 
-const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+// ==============================
+// SVG要素を簡単に作る関数
+// ==============================
+function createSVG(tag, attrs = {}) {
+    const el = document.createElementNS(svg.namespaceURI, tag);
 
-text.textContent = "Σ(ﾟДﾟ；≡；ﾟдﾟ)";
-text.setAttribute("x", 256);
-text.setAttribute("y", 50);
-text.setAttribute("text-anchor", "middle");
-text.setAttribute("font-size", "32");
+    for (const [key, value] of Object.entries(attrs)) {
+        el.setAttribute(key, value);
+    }
 
-svg.appendChild(text);
+    return el;
+}
 
-// ====================================
-// 単位円
-// ====================================
+// ==============================
+// デカルト座標の原点
+//
+// 数学上の原点は (0,0)
+// SVG上では中央の (500,500)
+// ==============================
+const ORIGIN_X = 500;
+const ORIGIN_Y = 500;
 
-const cx = 256;
-const cy = 220;
-const r = 100;
+// ==============================
+// 数学座標 → SVG座標へ変換
+//
+// x軸：右が +
+// y軸：上が +
+// SVG：下が +
+// ==============================
+function toSvgX(x) {
+    return ORIGIN_X + x;
+}
 
-const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+function toSvgY(y) {
+    return ORIGIN_Y - y;
+}
 
-circle.setAttribute("cx", cx);
-circle.setAttribute("cy", cy);
-circle.setAttribute("r", r);
-circle.setAttribute("fill", "none");
-circle.setAttribute("stroke", "black");
-
-svg.appendChild(circle);
-
-// 円周上を動く点
-const circlePoint = document.createElementNS(
-  "http://www.w3.org/2000/svg",
-  "circle",
+// ==============================
+// x軸（矢印付き）
+// ==============================
+svg.appendChild(
+    createSVG("line", {
+        x1: 20,
+        y1: ORIGIN_Y,
+        x2: 980,
+        y2: ORIGIN_Y,
+        stroke: "#e53935",
+        "stroke-width": 2,
+    }),
+);
+// ==============================
+// y軸（矢印付き）
+// ==============================
+svg.appendChild(
+    createSVG("line", {
+        x1: ORIGIN_X,
+        y1: 980,
+        x2: ORIGIN_X,
+        y2: 20,
+        stroke: "#1e88e5",
+        "stroke-width": 2,
+    }),
 );
 
-circlePoint.setAttribute("r", "5");
-circlePoint.setAttribute("fill", "red");
+// ==============================
+// 目盛り
+// ==============================
+for (let i = -400; i <= 400; i += 100) {
+    const px = toSvgX(i);
+    const py = toSvgY(i);
 
-svg.appendChild(circlePoint);
+    // x軸の目盛り線
+    svg.appendChild(
+        createSVG("line", {
+            x1: px,
+            y1: ORIGIN_Y - 10,
+            x2: px,
+            y2: ORIGIN_Y + 10,
+            stroke: "#e53935",
+        }),
+    );
 
-// 半径
-const radius = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    // y軸の目盛り線
+    svg.appendChild(
+        createSVG("line", {
+            x1: ORIGIN_X - 10,
+            y1: py,
+            x2: ORIGIN_X + 10,
+            y2: py,
+            stroke: "#1e88e5",
+        }),
+    );
+}
 
-radius.setAttribute("stroke", "red");
-radius.setAttribute("stroke-width", "2");
-
-svg.appendChild(radius);
-
-// 円の中心
-const centerPoint = document.createElementNS(
-  "http://www.w3.org/2000/svg",
-  "circle",
-);
-
-centerPoint.setAttribute("cx", cx);
-centerPoint.setAttribute("cy", cy);
-centerPoint.setAttribute("r", "3");
-centerPoint.setAttribute("fill", "black");
-
-svg.appendChild(centerPoint);
-
-// ====================================
-// sinグラフの座標系
-// ====================================
-
-const graphX = 20;
-const graphY = 432;
-const graphWidth = 472;
-
-// x軸
-const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-xAxis.setAttribute("x1", graphX);
-xAxis.setAttribute("y1", graphY);
-xAxis.setAttribute("x2", graphX + graphWidth);
-xAxis.setAttribute("y2", graphY);
-xAxis.setAttribute("stroke", "blue");
-
-svg.appendChild(xAxis);
-
-// y=1、0、-1 の補助線
-[graphY - AMP, graphY, graphY + AMP].forEach((y) => {
-  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-  line.setAttribute("x1", graphX);
-  line.setAttribute("x2", graphX + graphWidth);
-  line.setAttribute("y1", y);
-  line.setAttribute("y2", y);
-  line.setAttribute("stroke", "#cccccc");
-
-  if (y === graphY) {
-    line.setAttribute("stroke-dasharray", "5");
-  }
-
-  svg.appendChild(line);
+// 原点の表示
+const zero = createSVG("text", {
+    x: ORIGIN_X + 10,
+    y: ORIGIN_Y + 30,
+    "font-size": 18,
 });
 
-// ====================================
-// y軸ラベル
-// ====================================
+zero.textContent = "0";
+svg.appendChild(zero);
 
-[
-  { y: graphY - AMP, txt: "1" },
-  { y: graphY, txt: "0" },
-  { y: graphY + AMP, txt: "-1" },
-].forEach((v) => {
-  const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-
-  t.textContent = v.txt;
-  t.setAttribute("x", 5);
-  t.setAttribute("y", v.y + 7);
-  t.setAttribute("font-size", "22");
-
-  svg.appendChild(t);
+// ==============================
+// 軌跡
+// ==============================
+const path = createSVG("path", {
+    fill: "none",
+    stroke: "black",
+    "stroke-width": 3,
+    opacity: 0.4,
 });
-
-// ====================================
-// πの目盛り
-// ====================================
-
-const labels = ["", "π/2", "π", "3π/2", "2π", "5π/2", "3π"];
-
-labels.forEach((txt, i) => {
-  const x = graphX + i * 78;
-
-  if (i === 0) return;
-
-  const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-  tick.setAttribute("x1", x);
-  tick.setAttribute("x2", x);
-  tick.setAttribute("y1", graphY - AMP - 5);
-  tick.setAttribute("y2", graphY + AMP + 5);
-  tick.setAttribute("stroke", "#dddddd");
-
-  svg.appendChild(tick);
-
-  const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-
-  t.textContent = txt;
-  t.setAttribute("x", x - 20);
-  t.setAttribute("y", graphY - AMP - 18);
-  t.setAttribute("font-size", "22");
-  t.setAttribute("fill", "green");
-
-  svg.appendChild(t);
-});
-
-// ====================================
-// グラフタイトル
-// ====================================
-
-const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
-
-title.textContent = "y = sin(x)";
-title.setAttribute("x", 360);
-title.setAttribute("y", 320);
-title.setAttribute("font-size", "32");
-title.setAttribute("font-weight", "bold");
-
-svg.appendChild(title);
-
-// ====================================
-// sin波
-// ====================================
-
-const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-
-path.setAttribute("fill", "none");
-path.setAttribute("stroke", "gray");
-path.setAttribute("stroke-width", "2");
 
 svg.appendChild(path);
 
-// グラフ上の点
-const point = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-
-point.setAttribute("r", "5");
-point.setAttribute("fill", "red");
-
-svg.appendChild(point);
-
-// 円とグラフを結ぶ補助線
-const guide = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-guide.setAttribute("stroke", "gray");
-guide.setAttribute("stroke-dasharray", "5");
-
-svg.appendChild(guide);
-
-// ====================================
-// sin波を3周期描画
-// ====================================
-
 let d = "";
 
-for (let i = 0; i <= 1080; i++) {
-  const x = graphX + i * 0.45;
+// ==============================
+// 顔文字
+// ==============================
+const face = createSVG("text", {
+    "font-size": 50,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+});
 
-  const y = graphY - Math.sin(((i * Math.PI) / 180) * SPEED) * AMP;
+face.textContent = "(´・ω・`)";
 
-  if (i === 0) {
-    d += `M ${x} ${y}`;
-  } else {
-    d += ` L ${x} ${y}`;
-  }
-}
+svg.appendChild(face);
 
-path.setAttribute("d", d);
+// ==============================
+// 情報表示（(x, y)のみ）
+// ==============================
+const label = createSVG("text", {
+    x: 20,
+    y: 60,
+    "font-size": 50,
+    fill: "dimgray",
+});
 
-// ====================================
+svg.appendChild(label);
+
+// ==============================
+// 対数螺旋の式
+//
+// r = a × e^(bθ)
+// ==============================
+const a = 5;
+const b = 0.08;
+
+// 数学上の中心
+const cx = 0;
+const cy = 0;
+
+// 角度
+let theta = 0;
+
+// 外向きか内向きか
+let inward = false;
+
+// 一定速度
+const speed = 2;
+
+// ==============================
 // アニメーション
-// ====================================
-
-let t = 0;
-
+// ==============================
 function animate() {
-  t += 0.03;
+    // --------------------------
+    // 半径を計算
+    // --------------------------
+    const exponent = inward ? -b * theta : b * theta;
 
-  const s = t * SPEED;
+    const r = a * Math.exp(exponent);
 
-  // 顔文字
-  const faceX = 256 + Math.sin(s) * 120;
+    // --------------------------
+    // 数学座標を計算
+    // --------------------------
+    const x = cx + r * Math.cos(theta);
 
-  text.setAttribute("x", faceX);
+    const y = cy + r * Math.sin(theta);
 
-  // 円運動
-  const px = cx + Math.cos(s) * r;
+    // --------------------------
+    // 軌跡を描く
+    // --------------------------
+    const sx = toSvgX(x);
+    const sy = toSvgY(y);
 
-  const py = cy - Math.sin(s) * r;
+    if (d === "") {
+        d = `M ${sx} ${sy}`;
+    } else {
+        d += ` L ${sx} ${sy}`;
+    }
 
-  circlePoint.setAttribute("cx", px);
-  circlePoint.setAttribute("cy", py);
+    path.setAttribute("d", d);
 
-  radius.setAttribute("x1", cx);
-  radius.setAttribute("y1", cy);
-  radius.setAttribute("x2", px);
-  radius.setAttribute("y2", py);
+    // --------------------------
+    // 顔文字を移動
+    // --------------------------
+    face.setAttribute("transform", `translate(${sx},${sy})`);
 
-  // グラフ上の点
-  const deg = ((s * 180) / Math.PI) % 1080;
+    // --------------------------
+    // 計算式を表示
+    // --------------------------
 
-  const gx = graphX + deg * 0.45;
+    label.textContent = `θ = ${theta.toFixed(1)} rad`;
 
-  const gy = graphY - Math.sin(s) * AMP;
+    // --------------------------
+    // 一定速度で動く
+    //
+    // ds = r√(1+b²)dθ
+    // dθ = speed / (r√(1+b²))
+    // --------------------------
+    theta += speed / (r * Math.sqrt(1 + b * b));
 
-  point.setAttribute("cx", gx);
-  point.setAttribute("cy", gy);
+    // --------------------------
+    // 外側まで行ったら
+    // 中心へ向かう
+    // --------------------------
+    if (!inward && r > 420) {
+        inward = true;
+        theta = 0;
 
-  // 円とsin波を結ぶ補助線
-  guide.setAttribute("x1", px);
-  guide.setAttribute("y1", py);
-  guide.setAttribute("x2", gx);
-  guide.setAttribute("y2", gy);
+        d = "";
+        path.setAttribute("d", "");
+    }
 
-  requestAnimationFrame(animate);
+    // --------------------------
+    // 中心まで戻ったら
+    // 再び外へ向かう
+    // --------------------------
+    if (inward && r < 5.5) {
+        inward = false;
+        theta = 0;
+
+        d = "";
+        path.setAttribute("d", "");
+    }
+
+    requestAnimationFrame(animate);
 }
 
+// ==============================
+// アニメーション開始
+// ==============================
 animate();

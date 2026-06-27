@@ -1,16 +1,12 @@
-// ==============================
-// SVGを取得
-// （index.svg の場合は document.documentElement）
-// ==============================
+//svg要素を取得する
 const svg = document.documentElement;
 
 // ==============================
-// 画面いっぱいの正方形にする
+// 表示範囲を正方形にして、レスポンシブ対応
 // viewBox は常に 1000 × 1000
 // ==============================
 function resize() {
     const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
-
     svg.setAttribute("width", size);
     svg.setAttribute("height", size);
     svg.setAttribute("viewBox", "0 0 1000 1000");
@@ -24,61 +20,59 @@ window.addEventListener("resize", resize);
 // ==============================
 function createSVG(tag, attrs = {}) {
     const el = document.createElementNS(svg.namespaceURI, tag);
-
     for (const [key, value] of Object.entries(attrs)) {
         el.setAttribute(key, value);
     }
-
     return el;
 }
 
-const rectGenerator = (rectSize) => {
-    const rect = createSVG("rect", {
-        x: 500 - rectSize / 2,
-        y: 500 - rectSize / 2,
-        width: rectSize,
-        height: rectSize,
-        fill: "none",
-        stroke: "black",
-    });
-
-    svg.appendChild(rect);
-};
-
-const text = createSVG("text", {
-    x: 500,
-    y: 500,
-    fill: "black",
+const formula = createSVG("text", {
+    x: 300,
+    y: 200,
     "text-anchor": "middle",
-    "dominant-baseline": "middle",
-    "font-size": 70,
+    "font-style": "italic",
+    "font-family": "Cambria Math, STIX Two Math, serif",
+    "font-size": 150,
 });
 
-text.textContent = "(´・ω・`)";
-svg.appendChild(text);
+formula.textContent = "y = x";
+svg.appendChild(formula);
 
-let size = 800;
-function animate() {
-    if (size >= 10) {
-        size -= 3;
+const face = createSVG("text", {
+    x: 500,
+    y: 500,
+    "font-size": 32,
+    fill: "teal",
+});
+
+face.textContent = "(･ω･)";
+svg.appendChild(face);
+
+const info = createSVG("text", {
+    x: 300,
+    y: 350,
+    "text-anchor": "middle",
+    "font-size": 50,
+});
+
+svg.appendChild(info);
+
+let x = 0;
+const animate = () => {
+    if (x < 500) {
+        x++;
     } else {
-        size = 800;
-        svg.replaceChildren();
-        svg.appendChild(text);
-        text.textContent = "(´・ω・`)";
-        text.setAttribute("fill", "black");
+        x = 0;
     }
-    rectGenerator(size);
 
-    if (size <= 400) {
-        text.textContent = "(ﾟ∀ﾟ)";
-        text.setAttribute("fill", "gold");
-    }
-    if (size <= 200) {
-        text.setAttribute("fill", "red");
-    }
+    const y = x;
+
+    face.setAttribute("x", 500 + x);
+    face.setAttribute("y", 500 - y);
+
+    // xとyをリアルタイム表示
+    info.textContent = `x = ${x} , y = ${y}`;
 
     requestAnimationFrame(animate);
-}
-
+};
 animate();

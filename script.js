@@ -26,17 +26,28 @@ function createSVG(tag, attrs = {}) {
     return el;
 }
 
+//関数の式を表示
 const formula = createSVG("text", {
-    x: 300,
+    x: 500,
     y: 200,
     "text-anchor": "middle",
     "font-style": "italic",
     "font-family": "Cambria Math, STIX Two Math, serif",
-    "font-size": 150,
+    "font-size": 100,
 });
 
-formula.textContent = "y = x";
+formula.textContent = "y = x²/200";
 svg.appendChild(formula);
+
+//座標を表示
+const info = createSVG("text", {
+    x: 500,
+    y: 350,
+    "text-anchor": "middle",
+    "font-size": 50,
+});
+
+svg.appendChild(info);
 
 const face = createSVG("text", {
     x: 500,
@@ -48,30 +59,21 @@ const face = createSVG("text", {
 face.textContent = "(･ω･)";
 svg.appendChild(face);
 
-const info = createSVG("text", {
-    x: 300,
-    y: 350,
-    "text-anchor": "middle",
-    "font-size": 50,
-});
-
-svg.appendChild(info);
-
 let x = 0;
 const animate = () => {
-    if (x < 500) {
+    const y = x ** 2 / 200;
+
+    if (y < 500) {
         x++;
     } else {
         x = 0;
     }
 
-    const y = x;
-
     face.setAttribute("x", 500 + x);
     face.setAttribute("y", 500 - y);
 
     // xとyをリアルタイム表示
-    info.textContent = `x = ${x} , y = ${y}`;
+    info.textContent = `x = ${~~x} , y = ${~~y}`;
 
     requestAnimationFrame(animate);
 };

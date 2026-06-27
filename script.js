@@ -1,9 +1,8 @@
-//svg要素を取得する
+// svg要素を取得する
 const svg = document.documentElement;
 
 // ==============================
 // 表示範囲を正方形にして、レスポンシブ対応
-// viewBox は常に 1000 × 1000
 // ==============================
 function resize() {
     const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
@@ -26,55 +25,176 @@ function createSVG(tag, attrs = {}) {
     return el;
 }
 
-//関数の式を表示
+// ==============================
+// タイトル
+// ==============================
 const formula = createSVG("text", {
     x: 500,
-    y: 200,
+    y: 80,
     "text-anchor": "middle",
-    "font-style": "italic",
-    "font-family": "Cambria Math, STIX Two Math, serif",
-    "font-size": 100,
+    "font-size": 32,
 });
 
-formula.textContent = "y = x²/200";
+formula.textContent = "赤線が同じ長さになった時の角度が1ラジアン";
 svg.appendChild(formula);
 
-//座標を表示
-const info = createSVG("text", {
-    x: 500,
-    y: 350,
-    "text-anchor": "middle",
-    "font-size": 50,
+// ==============================
+// 大きい円
+// ==============================
+const R = 400;
+
+const circle = createSVG("circle", {
+    cx: 500,
+    cy: 500,
+    r: R,
+    fill: "none",
+    stroke: "black",
+    "stroke-width": 2,
+});
+svg.appendChild(circle);
+
+// 固定された半径
+const rLine = createSVG("line", {
+    x1: 500,
+    y1: 500,
+    x2: 900,
+    y2: 500,
+    stroke: "black",
+    "stroke-width": 6,
+});
+svg.appendChild(rLine);
+
+// 動く半径
+const line = createSVG("line", {
+    x1: 500,
+    y1: 500,
+    x2: 900,
+    y2: 500,
+    stroke: "red",
+    "stroke-width": 6,
+});
+svg.appendChild(line);
+
+// ==============================
+// 大きい円の弧
+// ==============================
+const arc = createSVG("circle", {
+    cx: 500,
+    cy: 500,
+    r: R,
+    fill: "none",
+    stroke: "red",
+    "stroke-width": 6,
 });
 
-svg.appendChild(info);
+svg.appendChild(arc);
+
+const circumference = 2 * Math.PI * R;
+arc.style.strokeDasharray = `0 ${circumference}`;
+
+// ==============================
+// 小さい円の弧
+// ==============================
+const a = 80;
+
+const smallArc = createSVG("circle", {
+    cx: 500,
+    cy: 500,
+    r: a,
+    fill: "none",
+    stroke: "blue",
+    "stroke-width": 6,
+});
+
+svg.appendChild(smallArc);
+
+const smallCircumference = 2 * Math.PI * a;
+smallArc.style.strokeDasharray = `0 ${smallCircumference}`;
+
+// ==============================
+// 顔文字
+// ==============================
+const faceBaseX = 500;
+const faceBaseY = 400;
 
 const face = createSVG("text", {
-    x: 500,
-    y: 500,
-    "font-size": 32,
+    x: faceBaseX,
+    y: faceBaseY,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+    "font-size": 80,
     fill: "teal",
 });
 
 face.textContent = "(･ω･)";
 svg.appendChild(face);
 
-let x = 0;
-const animate = () => {
-    const y = x ** 2 / 200;
+// ==============================
+// ブルブルアニメーション
+// ==============================
+let shaking = false;
 
-    if (y < 500) {
-        x++;
-    } else {
-        x = 0;
+function shakeFace() {
+    if (!shaking) return;
+
+    const dx = (Math.random() - 0.5) * 20;
+    const dy = (Math.random() - 0.5) * 20;
+
+    face.setAttribute("x", faceBaseX + dx);
+    face.setAttribute("y", faceBaseY + dy);
+
+    requestAnimationFrame(shakeFace);
+}
+
+// ==============================
+// メインアニメーション
+// ==============================
+let angle = 0;
+
+function animateRadian() {
+    angle += 0.005;
+
+    // 赤い半径を回転
+    const x = 500 + Math.cos(angle) * R;
+    const y = 500 + Math.sin(angle) * R;
+
+    line.setAttribute("x2", x);
+    line.setAttribute("y2", y);
+
+    // 大きい円の弧
+    const bigArcLength = R * angle;
+    arc.style.strokeDasharray = `${bigArcLength} ${circumference}`;
+
+    // 小さい円の弧
+    const smallArcLength = a * angle;
+    smallArc.style.strokeDasharray = `${smallArcLength} ${smallCircumference}`;
+
+    // 1ラジアン到達
+    if (angle >= 1) {
+        angle = 0;
+
+        face.textContent = "(ﾟ∀ﾟ)";
+        face.setAttribute("fill", "gold");
+
+        shaking = true;
+        shakeFace();
+
+        setTimeout(() => {
+            shaking = false;
+
+            face.setAttribute("x", faceBaseX);
+            face.setAttribute("y", faceBaseY);
+
+            face.textContent = "(･ω･)";
+            face.setAttribute("fill", "teal");
+
+            requestAnimationFrame(animateRadian);
+        }, 2000);
+
+        return;
     }
 
-    face.setAttribute("x", 500 + x);
-    face.setAttribute("y", 500 - y);
+    requestAnimationFrame(animateRadian);
+}
 
-    // xとyをリアルタイム表示
-    info.textContent = `x = ${~~x} , y = ${~~y}`;
-
-    requestAnimationFrame(animate);
-};
-animate();
+animateRadian();

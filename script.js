@@ -32,41 +32,53 @@ function createSVG(tag, attrs = {}) {
     return el;
 }
 
-//画面中央に円を配置
-// 円
-const circle = createSVG("circle", {
-    cx: 500,
-    cy: 500,
-    r: 100,
-    fill: "none",
-    stroke: "black",
-    "stroke-width": 5,
-});
-svg.appendChild(circle);
+const rectGenerator = (rectSize) => {
+    const rect = createSVG("rect", {
+        x: 500 - rectSize / 2,
+        y: 500 - rectSize / 2,
+        width: rectSize,
+        height: rectSize,
+        fill: "none",
+        stroke: "black",
+    });
 
-// 顔文字
-const face = createSVG("text", {
+    svg.appendChild(rect);
+};
+
+const text = createSVG("text", {
     x: 500,
     y: 500,
-    "text-anchor": "middle", // 横方向中央揃え
-    "dominant-baseline": "middle", // 縦方向中央揃え
-    "font-size": 40,
+    fill: "black",
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+    "font-size": 70,
 });
-face.textContent = "(´・ω・`)";
-svg.appendChild(face);
 
-// アニメーション
-function animate(t) {
-    // 半径を変化
-    const r = 125 + 75 * Math.sin(t * 0.002);
+text.textContent = "(´・ω・`)";
+svg.appendChild(text);
 
-    circle.setAttribute("r", r);
+let size = 800;
+function animate() {
+    if (size >= 10) {
+        size -= 3;
+    } else {
+        size = 800;
+        svg.replaceChildren();
+        svg.appendChild(text);
+        text.textContent = "(´・ω・`)";
+        text.setAttribute("fill", "black");
+    }
+    rectGenerator(size);
 
-    // 文字サイズも半径に合わせて変化
-    const fontSize = r * 0.35;
-    face.setAttribute("font-size", fontSize);
+    if (size <= 400) {
+        text.textContent = "(ﾟ∀ﾟ)";
+        text.setAttribute("fill", "gold");
+    }
+    if (size <= 200) {
+        text.setAttribute("fill", "red");
+    }
 
     requestAnimationFrame(animate);
 }
 
-requestAnimationFrame(animate);
+animate();

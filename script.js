@@ -26,60 +26,60 @@ function createSVG(tag, attrs = {}) {
     return el;
 }
 
-const face = createSVG("text", {
-    x: 500,
-    y: 500,
-    "text-anchor": "middle", // 横中央揃え
-    "dominant-baseline": "middle", // 縦中央揃え
-    "font-size": 100,
-    "font-weight": "bold",
-    fill: "teal",
+const ball = createSVG("circle", {
+    cx: 100,
+    cy: 500,
+    r: 16,
+    fill: "tan",
 });
+svg.appendChild(ball);
 
-face.textContent = "(･ω･)";
+// 二次関数の設定
+const a = 1 / 200;
+let x = -400;
+let y = 0;
+
+// スケール（見やすくするため）
+const scaleX = 1;
+const scaleY = 1;
+
+const face = createSVG("text", {
+    x: 300 + 400 * scaleX,
+    y: 100 + a * 400 ** 2 * scaleY,
+    "font-size": 64,
+    "font-weight": "bold",
+});
 svg.appendChild(face);
 
-let hue = 0;
-const circleGenerator = (r) => {
-    hue = (hue + 1) % 360;
-    // 円を作成
-    const circle = createSVG("circle", {
-        cx: 500, // 中心X
-        cy: 500, // 中心Y
-        r: r, // 半径
-        fill: "none",
-        stroke: `hsl(${hue}, 100%, 50%)`,
-    });
-
-    // SVGに追加
-    svg.appendChild(circle);
-};
-
-let r = 450;
 let t = 0;
-function animate() {
-    if (r < 250) {
+
+const animation = () => {
+    face.setAttribute("fill", "teal");
+    face.textContent = "(･ω･)";
+
+    y = a * x ** 2;
+    const svgX = 400 + x * scaleX;
+    const svgY = 100 + y * scaleY;
+    x += 6;
+
+    if (x >= 200) {
+        t += 0.3;
+
+        const shakeX = (Math.random() - 0.5) * 6; // ±3px
+        const shakeY = (Math.random() - 0.5) * 6;
+
+        face.setAttribute("transform", `translate(${shakeX}, ${shakeY})`);
+        face.setAttribute("fill", "gold");
         face.textContent = "(ﾟ∀ﾟ)";
-        face.setAttribute("fill", "orange");
-
-        t++;
-
-        face.setAttribute("x", 500 + Math.sin(t) * 2);
-        face.setAttribute("y", 500 + Math.cos(t) * 2);
     }
 
-    if (r > 0) {
-        r--;
-    } else {
-        r = 450;
-        svg.innerHTML = "";
-        face.textContent = "(･ω･)";
-        face.setAttribute("fill", "teal");
-        svg.appendChild(face);
+    if (x >= 400) {
+        x = -400;
     }
-    circleGenerator(r);
 
-    requestAnimationFrame(animate);
-}
+    ball.setAttribute("cx", svgX);
+    ball.setAttribute("cy", svgY);
 
-animate();
+    requestAnimationFrame(animation);
+};
+animation();

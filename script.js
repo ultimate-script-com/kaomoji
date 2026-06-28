@@ -26,60 +26,56 @@ function createSVG(tag, attrs = {}) {
     return el;
 }
 
-const ball = createSVG("circle", {
-    cx: 100,
-    cy: 500,
-    r: 16,
-    fill: "tan",
-});
-svg.appendChild(ball);
+// ==============================
+// バウンドボール
+// ==============================
 
-// 二次関数の設定
-const a = 1 / 200;
-let x = -400;
-let y = 0;
-
-// スケール（見やすくするため）
-const scaleX = 1;
-const scaleY = 1;
-
-const face = createSVG("text", {
-    x: 300 + 400 * scaleX,
-    y: 100 + a * 400 ** 2 * scaleY,
-    "font-size": 64,
+const ball = createSVG("text", {
+    x: 500,
+    y: 100,
+    fill: "teal",
+    "font-size": "64",
     "font-weight": "bold",
 });
-svg.appendChild(face);
+ball.textContent = "(･ω･)";
 
-let t = 0;
+svg.appendChild(ball);
 
-const animation = () => {
-    face.setAttribute("fill", "teal");
-    face.textContent = "(･ω･)";
+// 物理パラメータ
+const startY = 100;
+const startX = 500;
 
-    y = a * x ** 2;
-    const svgX = 400 + x * scaleX;
-    const svgY = 100 + y * scaleY;
-    x += 6;
+let x = startX;
+let y = startY;
+let v = 0;
 
-    if (x >= 200) {
-        t += 0.3;
+const g = 1;
+const bounce = 0.8;
+const floor = 950;
 
-        const shakeX = (Math.random() - 0.5) * 6; // ±3px
-        const shakeY = (Math.random() - 0.5) * 6;
+function animate() {
+    v += g;
+    y += v;
 
-        face.setAttribute("transform", `translate(${shakeX}, ${shakeY})`);
-        face.setAttribute("fill", "gold");
-        face.textContent = "(ﾟ∀ﾟ)";
+    // 着地
+    if (y > floor) {
+        y = floor;
+        v = -v * bounce;
+
+        // ほぼ止まったらリセット
+        if (Math.abs(v) < 0.5) {
+            reset();
+        }
     }
 
-    if (x >= 400) {
-        x = -400;
-    }
+    ball.setAttribute("y", y);
 
-    ball.setAttribute("cx", svgX);
-    ball.setAttribute("cy", svgY);
+    requestAnimationFrame(animate);
+}
 
-    requestAnimationFrame(animation);
-};
-animation();
+function reset() {
+    y = startY;
+    v = 0;
+}
+
+animate();

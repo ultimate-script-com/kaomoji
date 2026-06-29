@@ -28,138 +28,99 @@ function createSVG(tag, attrs = {}) {
     return el;
 }
 
-// 背景
-svg.appendChild(
-    createSVG("rect", {
-        width: 1000,
-        height: 1000,
-        fill: "#111",
-    }),
-);
-
-// 多角形
-const polygon = createSVG("polygon", {
-    fill: "rgba(0,255,255,0.2)",
-    stroke: "cyan",
-    "stroke-width": 5,
+// ==============================
+// 正方形とテキスト
+// ==============================
+const square = createSVG("rect", {
+    x: 250,
+    y: 250,
+    width: 0,
+    height: 0,
+    fill: "skyblue",
+    stroke: "black",
+    "stroke-width": 3,
 });
-svg.appendChild(polygon);
+svg.appendChild(square);
 
-// π表示
-const text = createSVG("text", {
+const areaText = createSVG("text", {
     x: 500,
-    y: 100,
-    fill: "white",
-    "font-size": 42,
+    y: 500,
     "text-anchor": "middle",
-    "font-family": "monospace",
+    "dominant-baseline": "middle",
+    "font-size": 100,
+    "font-weight": "bold",
+    fill: "black",
 });
-svg.appendChild(text);
+svg.appendChild(areaText);
 
-// 顔文字
-const face = createSVG("text", {
+const rootText = createSVG("text", {
     x: 500,
-    y: 520,
-    fill: "orange",
-    "font-size": 60,
+    y: 0,
     "text-anchor": "middle",
+    "font-size": 64,
+    "font-weight": "bold",
+    fill: "teal",
 });
-face.textContent = "(･ω･)";
-svg.appendChild(face);
+svg.appendChild(rootText);
+
+const approximate = createSVG("text", {
+    x: 500,
+    y: 900,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+    "font-size": 64,
+    "font-weight": "bold",
+    fill: "teal",
+});
+svg.appendChild(approximate);
 
 // ==============================
-// 頂点生成
+// アニメーション
 // ==============================
-function getPoints(sides) {
-    const pts = [];
-    const r = 320;
-    const cx = 500;
-    const cy = 500;
+let n = 1;
+let start = null;
+const duration = 1000; // 1秒
 
-    for (let i = 0; i < sides; i++) {
-        const a = (i * Math.PI * 2) / sides - Math.PI / 2;
+function animate(time) {
+    if (!start) start = time;
 
-        pts.push({
-            x: cx + r * Math.cos(a),
-            y: cy + r * Math.sin(a),
-        });
-    }
+    const t = (time - start) / duration;
 
-    return pts;
-}
+    // 現在の面積から一辺を計算
+    const side = Math.sqrt(n) * 150;
 
-// ==============================
-// 頂点数を合わせる
-// ==============================
-function resample(points, n) {
-    const result = [];
+    const x = 500 - side / 2;
+    const y = 500 - side / 2;
 
-    for (let i = 0; i < n; i++) {
-        const j = (i / n) * points.length;
-        const a = Math.floor(j);
-        const b = (a + 1) % points.length;
-        const t = j - a;
+    square.setAttribute("width", side);
+    square.setAttribute("height", side);
+    square.setAttribute("x", x);
+    square.setAttribute("y", y);
 
-        const p1 = points[a];
-        const p2 = points[b];
+    // 面積を正方形の中央へ配置
+    areaText.textContent = n;
+    areaText.setAttribute("x", x + side / 2);
+    areaText.setAttribute("y", y + side / 2);
 
-        result.push({
-            x: p1.x + (p2.x - p1.x) * t,
-            y: p1.y + (p2.y - p1.y) * t,
-        });
-    }
+    // √nを正方形の上辺へ配置
+    rootText.textContent = `${Math.sqrt(n).toFixed(3)}`;
+    rootText.setAttribute("x", x + side / 2);
+    rootText.setAttribute("y", Math.max(40, y - 20));
 
-    return result;
-}
-
-// ==============================
-// モーフィング
-// ==============================
-let sides = 6;
-let nextSides = 7;
-let t = 0;
-
-function animate() {
-    const n = Math.max(sides, nextSides);
-
-    const p1 = resample(getPoints(sides), n);
-    const p2 = resample(getPoints(nextSides), n);
-
-    const pts = [];
-
-    for (let i = 0; i < n; i++) {
-        const x = p1[i].x + (p2[i].x - p1[i].x) * t;
-
-        const y = p1[i].y + (p2[i].y - p1[i].y) * t;
-
-        pts.push(`${x},${y}`);
-    }
-
-    polygon.setAttribute("points", pts.join(" "));
-
-    const displaySides = sides + t;
-
-    const piApprox = displaySides * Math.sin(Math.PI / displaySides);
-
-    text.textContent = `π=${piApprox.toFixed(4)}　${~~displaySides}角形`;
-
-    const progress = sides / 500;
-    const speed = 0.002 + 0.2 * Math.sqrt(progress);
-
-    t += speed;
+    //ルートの近似値を表示
+    approximate.textContent = `√${n} ≒ ${Math.sqrt(n).toFixed(3)}`;
 
     if (t >= 1) {
-        t = 0;
-        sides++;
-        nextSides++;
+        n++;
 
-        if (nextSides > 500) {
-            sides = 500;
-            nextSides = 501;
+        if (n > 10) {
+            n = 1;
         }
+
+        start = time;
     }
 
     requestAnimationFrame(animate);
 }
 
-setTimeout(animate, 300);
+requestAnimationFrame(animate);

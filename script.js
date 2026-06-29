@@ -29,98 +29,73 @@ function createSVG(tag, attrs = {}) {
 }
 
 // ==============================
-// 正方形とテキスト
+// 中央シーソー
 // ==============================
-const square = createSVG("rect", {
-    x: 250,
-    y: 250,
-    width: 0,
-    height: 0,
-    fill: "skyblue",
-    stroke: "black",
-    "stroke-width": 3,
-});
-svg.appendChild(square);
 
-const areaText = createSVG("text", {
-    x: 500,
-    y: 500,
+// 支点（三角形）
+const pivot = createSVG("polygon", {
+    points: "500,470 470,520 530,520",
+    fill: "#555",
+});
+
+// シーソー板
+const plank = createSVG("rect", {
+    x: 100,
+    y: 450, // 少し上にして支点に“乗る”見た目へ
+    width: 800,
+    height: 20,
+    fill: "dimgray",
+    transform: "rotate(0 500 470)", // 支点基準
+});
+
+// 顔文字（左・右端）
+const faceA = createSVG("text", {
+    x: 150,
+    y: 430,
+    "font-size": 60,
     "text-anchor": "middle",
-    "dominant-baseline": "middle",
-    "font-size": 100,
     "font-weight": "bold",
-    fill: "black",
+    fill: "olive",
 });
-svg.appendChild(areaText);
+faceA.textContent = "(･ω･)";
 
-const rootText = createSVG("text", {
-    x: 500,
-    y: 0,
+const faceB = createSVG("text", {
+    x: 850,
+    y: 430,
+    "font-size": 60,
     "text-anchor": "middle",
-    "font-size": 64,
-    "font-weight": "bold",
-    fill: "teal",
-});
-svg.appendChild(rootText);
-
-const approximate = createSVG("text", {
-    x: 500,
-    y: 900,
-    "text-anchor": "middle",
-    "dominant-baseline": "middle",
-    "font-size": 64,
     "font-weight": "bold",
     fill: "teal",
 });
-svg.appendChild(approximate);
+faceB.textContent = "(･ω･)";
+
+// SVGに追加（支点が上に見えるよう順序も重要）
+svg.appendChild(plank);
+svg.appendChild(pivot);
+svg.appendChild(faceA);
+svg.appendChild(faceB);
 
 // ==============================
-// アニメーション
+// アニメーション（シーソー）
 // ==============================
-let n = 1;
-let start = null;
-const duration = 1000; // 1秒
+let t = 0;
 
-function animate(time) {
-    if (!start) start = time;
+const cx = 500;
+const cy = 470; // ★支点の頂点に統一
 
-    const t = (time - start) / duration;
+function animate() {
+    t += 0.02;
 
-    // 現在の面積から一辺を計算
-    const side = Math.sqrt(n) * 150;
+    const angle = Math.sin(t) * 0.35; // 揺れ角
 
-    const x = 500 - side / 2;
-    const y = 500 - side / 2;
+    const deg = angle * 35;
 
-    square.setAttribute("width", side);
-    square.setAttribute("height", side);
-    square.setAttribute("x", x);
-    square.setAttribute("y", y);
-
-    // 面積を正方形の中央へ配置
-    areaText.textContent = n;
-    areaText.setAttribute("x", x + side / 2);
-    areaText.setAttribute("y", y + side / 2);
-
-    // √nを正方形の上辺へ配置
-    rootText.textContent = `${Math.sqrt(n).toFixed(3)}`;
-    rootText.setAttribute("x", x + side / 2);
-    rootText.setAttribute("y", Math.max(40, y - 20));
-
-    //ルートの近似値を表示
-    approximate.textContent = `√${n} ≒ ${Math.sqrt(n).toFixed(3)}`;
-
-    if (t >= 1) {
-        n++;
-
-        if (n > 10) {
-            n = 1;
-        }
-
-        start = time;
-    }
+    // シーソー回転（支点基準）
+    plank.setAttribute("transform", `rotate(${deg} ${cx} ${cy})`);
+    faceA.setAttribute("transform", `rotate(${deg} ${cx} ${cy})`);
+    faceB.setAttribute("transform", `rotate(${deg} ${cx} ${cy})`);
 
     requestAnimationFrame(animate);
 }
 
-requestAnimationFrame(animate);
+animate();

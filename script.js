@@ -1,225 +1,241 @@
-console.log("(･ω･)"); //普段用いる絵文字をメモ ※絶対消すな
+console.log("(･ω･)"); //用いる絵文字、絶対消すな！！
 
 const svg = document.documentElement;
 
-// ==============================
+// ====================
 // レスポンシブ
-// ==============================
+// ====================
 function resize() {
-    const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
-
-    svg.setAttribute("width", size);
-    svg.setAttribute("height", size);
+    const s = Math.min(innerWidth, innerHeight) * 0.95;
+    svg.setAttribute("width", s);
+    svg.setAttribute("height", s);
     svg.setAttribute("viewBox", "0 0 1000 1000");
 }
 resize();
-window.addEventListener("resize", resize);
+addEventListener("resize", resize);
 
-// ==============================
-// SVG作成
-// ==============================
-function createSVG(tag, attrs = {}) {
-    const el = document.createElementNS(svg.namespaceURI, tag);
+// ====================
+// SVG生成関数
+// ====================
+const el = (t, a = {}) => {
+    const n = document.createElementNS("http://www.w3.org/2000/svg", t);
+    Object.entries(a).forEach(([k, v]) => n.setAttribute(k, v));
+    return n;
+};
 
-    for (const [k, v] of Object.entries(attrs)) {
-        el.setAttribute(k, v);
-    }
-
-    return el;
-}
-
-// ==============================
-// コップ
-// ==============================
-const cupX = 200;
-const cupY = 100;
-const cupW = 500;
-const cupH = 800;
-
-// ==============================
-// 水用クリップ
-// ==============================
-const defs = createSVG("defs");
-svg.appendChild(defs);
-
-const clip = createSVG("clipPath", {
-    id: "waterClip",
-});
-
-clip.appendChild(
-    createSVG("rect", {
-        x: cupX + 10,
-        y: cupY + 80,
-        width: cupW - 20,
-        height: cupH - 90,
+// ====================
+// 背景
+// ====================
+svg.append(
+    el("rect", {
+        width: 1000,
+        height: 1000,
+        fill: "#111",
     }),
 );
 
-defs.appendChild(clip);
+// ====================
+// 雷レイヤー
+// ====================
+const lightningLayer = el("g");
+svg.append(lightningLayer);
 
-// ==============================
-// 水グループ
-// ==============================
-const waterGroup = createSVG("g", {
-    "clip-path": "url(#waterClip)",
-});
+const lightningCount = 8;
+const lightnings = [];
 
-svg.appendChild(waterGroup);
+for (let i = 0; i < lightningCount; i++) {
+    const path = el("path", {
+        fill: "none",
+        stroke: "#fff",
+        "stroke-width": 3,
+        opacity: 0,
+    });
 
-// ==============================
-// 水
-// ==============================
-const water = createSVG("path", {
-    fill: "#69c8ff",
-    opacity: 0.9,
-});
+    lightningLayer.append(path);
 
-waterGroup.appendChild(water);
+    lightnings.push({
+        el: path,
+        active: false,
+        time: 0,
+        duration: 0,
+        startX: 0,
+        endX: 0,
+    });
+}
 
-// ==============================
-// 顔文字
-// ==============================
-const kaomoji = createSVG("text", {
+function rand(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function createLightning(L) {
+    const { el } = L;
+
+    const startX = rand(100, 900);
+    const endX = startX + rand(-80, 80);
+
+    let x = startX;
+    let y = rand(-100, -50);
+
+    const segments = [];
+    segments.push(`${x},${y}`);
+
+    const points = Math.floor(rand(6, 12));
+
+    for (let i = 0; i < points; i++) {
+        y += rand(80, 150);
+        x += rand(-60, 60);
+        segments.push(`${x},${y}`);
+    }
+
+    segments.push(`${endX},${1000 + 100}`);
+
+    el.setAttribute("d", "M " + segments.join(" L "));
+
+    L.active = true;
+    L.time = 0;
+    L.duration = rand(20, 40); // フレーム数
+    L.startX = startX;
+    L.endX = endX;
+
+    el.setAttribute("stroke-width", rand(2, 4));
+
+    el.setAttribute("opacity", rand(0.6, 1));
+}
+
+// ====================
+// 顔文字グループ
+// ====================
+const boss = el("g");
+svg.append(boss);
+
+const shadow = el("text", {
     x: 500,
-    y: 500,
-    "font-size": 64,
+    y: 505,
     "text-anchor": "middle",
     "dominant-baseline": "middle",
+    "font-size": 120,
     "font-family": "monospace",
     "font-weight": "bold",
-    fill: "teal",
+    fill: "#000",
+    opacity: 0.6,
+});
+shadow.textContent = "(･ω･)";
+boss.append(shadow);
+
+const face = el("text", {
+    x: 500,
+    y: 500,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle",
+    "font-size": 120,
+    "font-family": "monospace",
+    "font-weight": "bold",
 });
 
-kaomoji.textContent = "(･ω･)";
-waterGroup.appendChild(kaomoji);
+const chars = ["(", "･", "ω", "･", ")"];
+const spans = [];
 
-// ==============================
-// コップ本体
-// ==============================
-svg.appendChild(
-    createSVG("rect", {
-        x: cupX,
-        y: cupY,
-        width: cupW,
-        height: cupH,
-        rx: 20,
-        ry: 20,
-        fill: "none",
-        stroke: "#555",
-        "stroke-width": 12,
-    }),
-);
+chars.forEach((c) => {
+    const t = el("tspan");
+    t.textContent = c;
+    face.append(t);
+    spans.push(t);
+});
 
-// ハイライト
-svg.appendChild(
-    createSVG("rect", {
-        x: cupX + 30,
-        y: cupY + 40,
-        width: 25,
-        height: cupH - 80,
-        rx: 10,
-        fill: "white",
-        opacity: 0.35,
-    }),
-);
+boss.append(face);
 
-// ==============================
-// 泡
-// ==============================
-const bubbles = [];
+// ====================
+// レインボー色
+// ====================
+let hue = 0;
 
-for (let i = 0; i < 20; i++) {
-    const r = 4 + Math.random() * 8;
+function rainbowColor(h) {
+    let l = 70;
 
-    const b = createSVG("circle", {
-        cx: cupX + 50 + Math.random() * (cupW - 100),
-        cy: cupY + 120 + Math.random() * (cupH - 180),
-        r,
-        fill: "white",
-        opacity: 0.3,
-    });
-
-    waterGroup.appendChild(b);
-
-    bubbles.push({
-        el: b,
-        x: Number(b.getAttribute("cx")),
-        y: Number(b.getAttribute("cy")),
-        speed: 0.2 + Math.random() * 0.4,
-    });
-}
-
-// ==============================
-// 水面
-// ==============================
-let waterLevel = cupY + 270;
-
-function createWave(time) {
-    const amplitude = 12;
-    const wavelength = 70;
-
-    let d = `M ${cupX} ${cupY + cupH}`;
-    d += ` L ${cupX} ${waterLevel}`;
-
-    for (let x = cupX; x <= cupX + cupW; x += 5) {
-        const y =
-            waterLevel +
-            Math.sin(x / wavelength + time) * amplitude +
-            Math.sin(x / 40 + time * 1.5) * 3;
-
-        d += ` L ${x} ${y}`;
+    if (h >= 180 && h <= 300) {
+        l = 80;
     }
 
-    d += ` L ${cupX + cupW} ${cupY + cupH}`;
-    d += ` Z`;
-
-    return d;
+    return `hsl(${h},100%,${l}%)`;
 }
 
-// ==============================
-// 顔文字の位置
-// ==============================
-const faceX = cupX + cupW / 2;
-
-// ==============================
+// ====================
 // アニメーション
-// ==============================
+// ====================
 let t = 0;
 
 function animate() {
-    t += 0.04;
+    t += 0.02;
+    hue = (hue + 1) % 360;
 
-    // 水
-    water.setAttribute("d", createWave(t));
+    // ボスの鼓動
+    const scale = 1 + Math.sin(t * 2.5) * 0.05;
 
-    // 顔文字を浮かせる
-    const faceY =
-        waterLevel +
-        Math.sin(faceX / 70 + t) * 12 +
-        Math.sin(faceX / 40 + t * 1.5) * 3 -
-        35;
+    const y = Math.sin(t * 2) * 10;
 
-    kaomoji.setAttribute("x", faceX + Math.sin(t * 1.5) * 20);
+    boss.setAttribute(
+        "transform",
+        `translate(500 ${500 + y})
+         scale(${scale})
+         translate(-500 -500)`,
+    );
 
-    kaomoji.setAttribute("y", faceY + Math.sin(t * 3) * 5);
+    // 顔文字を虹色発光
+    spans.forEach((sp, i) => {
+        const h = (hue + i * 72) % 360;
 
-    // 少し回転
-    const angle = Math.sin(t * 2) * 8;
+        const color = rainbowColor(h);
 
-    kaomoji.setAttribute("transform", `rotate(${angle} ${faceX} ${faceY})`);
+        sp.setAttribute("fill", color);
 
-    // 泡
-    bubbles.forEach((b, i) => {
-        b.y -= b.speed;
+        sp.setAttribute(
+            "filter",
+            `drop-shadow(0 0 10px ${color})
+             drop-shadow(0 0 20px ${color})
+             drop-shadow(0 0 35px ${color})`,
+        );
+    });
 
-        if (b.y < cupY + 120) {
-            b.y = cupY + cupH - 40;
-            b.x = cupX + 50 + Math.random() * (cupW - 100);
+    // ランダムで雷を落とす
+    if (Math.random() < 0.05) {
+        const L = lightnings.find((l) => !l.active);
+
+        if (L) {
+            createLightning(L);
+        }
+    }
+
+    // 雷アニメーション
+    lightnings.forEach((L) => {
+        if (!L.active) return;
+
+        L.time++;
+
+        const alpha = 1 - L.time / L.duration;
+
+        L.el.setAttribute("opacity", alpha);
+
+        // 点滅
+        if (Math.random() < 0.4) {
+            L.el.setAttribute("opacity", alpha * 0.3);
         }
 
-        b.el.setAttribute("cx", b.x + Math.sin(t * 2 + i) * 5);
+        // 雷の色
+        const c = rainbowColor((hue + L.startX / 3) % 360);
 
-        b.el.setAttribute("cy", b.y);
+        L.el.setAttribute("stroke", c);
+
+        L.el.setAttribute(
+            "filter",
+            `drop-shadow(0 0 8px ${c})
+             drop-shadow(0 0 16px ${c})
+             drop-shadow(0 0 30px ${c})`,
+        );
+
+        if (L.time >= L.duration) {
+            L.active = false;
+            L.el.setAttribute("opacity", 0);
+        }
     });
 
     requestAnimationFrame(animate);
